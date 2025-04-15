@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bhai ka Ultimate TTS</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        textarea {
+            width: 400px;
+            height: 100px;
+            margin: 10px;
+            padding: 10px;
+        }
+        select, button, input[type="submit"], input[type="range"], input[type="file"] {
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        input[type="submit"], button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover, button:hover {
+            background-color: #45a049;
+        }
+        #audioPlayer, #translatedAudioPlayer {
+            margin: 10px;
+        }
+        #result, #translationResult {
+            margin-top: 10px;
+        }
+        #downloadBtn, #downloadTranslatedBtn {
+            display: none;
+            background-color: #008CBA;
+            padding: 10px 20px;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+            text-align: left;
+        }
+        .section {
+            margin: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Bhai ka Ultimate Text-to-Speech</h2>
+
+    <!-- Text-to-Speech Section -->
+    <div class="section">
+        <h3>Text to Speech</h3>
+        <form id="ttsForm">
+            <textarea name="text" placeholder="Yaha text daal (ఉదా: హాయ్, నీవు ఎలా ఉన్నావు?)" required></textarea><br>
+            <label for="lang">Language:</label>
+            <select name="lang" required>
+                <option value="te">Telugu</option>
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="ta">Tamil</option>
+                <option value="zh-cn">Chinese</option>
+                <option value="ja">Japanese</option>
+                <option value="ko">Korean</option>
+                <option value="fr">French</option>
+            </select><br>
+            <label for="emotion">Emotion:</label>
+            <select name="emotion">
+                <option value="normal">Normal</option>
+                <option value="funny">Funny</option>
+                <option value="comedy">Comedy</option>
+                <option value="angry">Angry</option>
+                <option value="narration">Narration</option>
+            </select><br>
+            <label for="pitch">Pitch (-12 to +12):</label>
+            <input type="range" name="pitch" min="-12" max="12" value="0"><br>
+            <label for="tempo">Tempo (0.5x to 2x):</label>
+            <input type="range" name="tempo" min="0.5" max="2" step="0.1" value="1"><br>
+            <label for="reverb">Reverb (0-100%):</label>
+            <input type="range" name="reverb" min="0" max="100" value="0"><br>
+            <label for="smooth">Smoothing:</label>
+            <input type="checkbox" name="smooth" checked><br>
+            <label for="noise_clean">Noise Cleaning:</label>
+            <input type="checkbox" name="noise_clean"><br>
+            <label for="clone_audio">Clone Voice (Upload):</label>
+            <input type="file" name="clone_audio" accept=".mp3,.wav"><br>
+            <input type="submit" value="Audio Banao">
+        </form>
+        <div id="result">
+            <audio id="audioPlayer" controls style="display:none;"></audio>
+            <button id="downloadBtn" onclick="downloadAudio()">Download MP3</button>
+        </div>
+        <p><b>Tip:</b> Funny ke liye "హాహా!", Comedy ke liye "హే, హే!", Angry ke liye "గర్ర్!" add kar.</p>
+    </div>
+
+    <!-- Audio-to-Audio Translation Section -->
+    <div class="section">
+        <h3>Audio to Audio Translation</h3>
+        <form id="translationForm">
+            <label for="audio_input">Upload Audio:</label>
+            <input type="file" name="audio_input" accept=".mp3,.wav" required><br>
+            <label for="target_lang">Target Language:</label>
+            <select name="target_lang" required>
+                <option value="te">Telugu</option>
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="ta">Tamil</option>
+                <option value="zh-cn">Chinese</option>
+                <option value="ja">Japanese</option>
+                <option value="ko">Korean</option>
+                <option value="fr">French</option>
+            </select><br>
+            <label for="target_emotion">Target Emotion:</label>
+            <select name="target_emotion">
+                <option value="normal">Normal</option>
+                <option value="funny">Funny</option>
+                <option value="comedy">Comedy</option>
+                <option value="angry">Angry</option>
+                <option value="narration">Narration</option>
+            </select><br>
+            <input type="submit" value="Translate Audio">
+        </form>
+        <div id="translationResult">
+            <audio id="translatedAudioPlayer" controls style="display:none;"></audio>
+            <button id="downloadTranslatedBtn" onclick="downloadTranslatedAudio()">Download Translated MP3</button>
+        </div>
+    </div>
+
+    <script>
+        // Download TTS Audio
+        function downloadAudio() {
+            const audioSrc = document.getElementById('audioPlayer').src;
+            if (audioSrc) {
+                const link = document.createElement('a');
+                link.href = audioSrc;
+                link.download = 'output.mp3';
+                link.click();
+            } else {
+                alert('Pehle audio banao!');
+            }
+        }
+
+        // Download Translated Audio
+        function downloadTranslatedAudio() {
+            const audioSrc = document.getElementById('translatedAudioPlayer').src;
+            if (audioSrc) {
+                const link = document.createElement('a');
+                link.href = audioSrc;
+                link.download = 'translated_output.mp3';
+                link.click();
+            } else {
+                alert('Pehle audio translate karo!');
+            }
+        }
+
+        // TTS Form Submission
+        document.getElementById('ttsForm').onsubmit = function(e) {
+            e.preventDefault();
+            const form = new FormData(this);
+            fetch('/convert', {
+                method: 'POST',
+                body: form
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Audio generate nahi hua');
+                return response.blob();
+            })
+            .then(blob => {
+                const audioPlayer = document.getElementById('audioPlayer');
+                const downloadBtn = document.getElementById('downloadBtn');
+                const url = URL.createObjectURL(blob);
+                audioPlayer.src = url;
+                audioPlayer.style.display = 'block';
+                downloadBtn.style.display = 'inline-block';
+                audioPlayer.play();
+            })
+            .catch(error => alert('Error: ' + error.message));
+        };
+
+        // Translation Form Submission
+        document.getElementById('translationForm').onsubmit = function(e) {
+            e.preventDefault();
+            const form = new FormData(this);
+            fetch('/translate_audio', {
+                method: 'POST',
+                body: form
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Audio translate nahi hua');
+                return response.blob();
+            })
+            .then(blob => {
+                const audioPlayer = document.getElementById('translatedAudioPlayer');
+                const downloadBtn = document.getElementById('downloadTranslatedBtn');
+                const url = URL.createObjectURL(blob);
+                audioPlayer.src = url;
+                audioPlayer.style.display = 'block';
+                downloadBtn.style.display = 'inline-block';
+                audioPlayer.play();
+            })
+            .catch(error => alert('Error: ' + error.message));
+        };
+    </script>
+</body>
+</html>
